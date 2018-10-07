@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -24,6 +25,11 @@ type warning struct {
 }
 
 func run() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	cmd := exec.Command("sbt", "-no-colors", "test:compile")
 	r, w := io.Pipe()
 	cmd.Stdout, cmd.Stderr = w, w
@@ -46,7 +52,7 @@ func run() error {
 				if _, err := strconv.Atoi(xs[1]); err != nil {
 					continue
 				}
-				pos, mess := xs[0]+":"+xs[1]+":"+xs[2], strings.TrimSpace(xs[3])
+				pos, mess := trimDir(cwd, xs[0]+":"+xs[1]+":"+xs[2]), strings.TrimSpace(xs[3])
 				for _, w := range ws {
 					if w.message == mess {
 						w.positions = append(w.positions, pos)
@@ -75,4 +81,11 @@ func run() error {
 	}
 	fmt.Printf("Total: %d warnings\n", total)
 	return nil
+}
+
+func trimDir(cwd, dir string) string {
+	if !strings.HasPrefix(dir, cwd) {
+		return dir
+	}
+	return strings.TrimPrefix(strings.TrimPrefix(dir, cwd), string(filepath.Separator))
 }

@@ -68,7 +68,8 @@ func run() error {
 	}
 
 	sort.Slice(ws, func(i, j int) bool {
-		return len(ws[i].positions) > len(ws[j].positions)
+		return len(ws[i].positions) > len(ws[j].positions) ||
+			len(ws[i].positions) == len(ws[j].positions) && ws[i].message < ws[j].message
 	})
 	var total int
 	for _, w := range ws {
